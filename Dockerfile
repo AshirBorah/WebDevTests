@@ -1,26 +1,32 @@
 ## BUILDING
 ##   (from project root directory)
-##   $ docker build -t nginx-for-eagleshot-webdevtests .
+##   $ docker build -t python-for-eagleshot-webdevtests .
 ##
 ## RUNNING
-##   $ docker run -p 80:80 nginx-for-eagleshot-webdevtests
-##
-## CONNECTING
-##   Lookup the IP of your active docker host using:
-##     $ docker-machine ip $(docker-machine active)
-##   Connect to the container at DOCKER_IP:80
-##     replacing DOCKER_IP for the IP of your active docker host
-##
-## NOTES
-##   This is a prebuilt version of nginx.
-##   For more information and documentation visit:
-##     https://github.com/bitnami/bitnami-docker-nginx
+##   $ docker run python-for-eagleshot-webdevtests
 
-FROM gcr.io/bitnami-containers/nginx:1.12.0-r3
+FROM gcr.io/bitnami-containers/minideb-extras:jessie-r14-buildpack
 
-ENV STACKSMITH_STACK_ID="2z8qs9e" \
-    STACKSMITH_STACK_NAME="nginx for EagleShot/WebDevTests" \
-    STACKSMITH_STACK_PRIVATE="1" \
-    BITNAMI_CONTAINER_ORIGIN="stacksmith"
+MAINTAINER Bitnami <containers@bitnami.com>
+
+ENV STACKSMITH_STACK_ID="6capjpp" \
+    STACKSMITH_STACK_NAME="Python for EagleShot/WebDevTests" \
+    STACKSMITH_STACK_PRIVATE="1"
+
+# Install required system packages
+RUN install_packages libc6 libssl1.0.0 libffi6 libncurses5 libtinfo5 zlib1g libreadline6 libsqlite3-0
+
+RUN bitnami-pkg install python-3.6.1-0 --checksum 9d4c880736fe74c29d4515318ace3f4eceabb5b625c1ed3268995427cfa4edf7
+
+ENV PATH=/opt/bitnami/python/bin:$PATH
 
 ## STACKSMITH-END: Modifications below this line will be unchanged when regenerating
+
+# Django template
+COPY . /app
+WORKDIR /app
+
+RUN pip install -r requirements.txt
+
+EXPOSE 8000
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
